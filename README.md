@@ -1,5 +1,5 @@
-HSMM-Pi
-=======
+HSMM-Pi with Wireless AP
+========================
 
 HSMM-Pi is a set of tools designed to easily configure the Raspberry Pi to function as a High-Speed Multimedia (HSMM) or Broadband-Hamnet (BBHN) wireless node.  HSMM and BBHN offer radio amateurs (HAMs) the ability to operate high-speed data networks in the frequencies shared with unlicenced users of 802.11 b/g/n networking equipment.  HAMs can operate HSMM or BBHN at higher power with larger antennas than are available to unlicensed users.  The HSMM-Pi project makes it possible to run an HSMM or BBHN mesh node on the Raspberry Pi.  The project has been tested to work on other embedded computing platforms, including the BeagleBone and BeagleBone Black.
 
@@ -20,21 +20,17 @@ The HSMM-Pi project is designed to run on Ubuntu 12.04 systems.  Rather than pro
  * Easier to host:  I only need to post the installation script and webapp files on Github and it's done.
  * Easier to seek support: Ubuntu is widely used and supported, no need to introduce another customization.
 
+This fork allows the implementation with two wireless interfaces, one for the Mesh Network and another as Access Point for a wireless LAN.
+
 Hardware Requirements
 =====================
-HSMM-Pi has been tested to work with the Raspberry Pi running the Raspbian OS, with the BeagleBone running Debian, and with the BeagleBone Black running Ubuntu 12.04 from the onboard eMMC flash memory.  The requirements for each are listed below.
+HSMM-Pi has been tested to work with the Raspberry Pi running the Raspbian OS.  The requirements for each are listed below.
 
 Raspberry-Pi Node:
 
  *  Raspberry Pi (256MB or 512MB) or Raspberry Pi 2
- *  USB WiFi adapter (tested with the N150 adapter using the Ralink 5370 chipset, and with the Alfa AWSU036NH)
+ *  2 USB WiFi adapter (tested with the N150 adapter using the Ralink 5370 chipset, and with the Alfa AWSU036NH)
  *  SD memory card (4GB minimum)
-
-BeagleBone Node:
-
- *  BeagleBone or BeagleBone Black
- *  USB WiFi adapter (tested with the N150 adapter using the Ralink 5370 chipset)
- *  SD memory card (4GB minimum) (in the case of BeagleBone Black, used for initial imaging of the eMMC flash memory only)
 
 Modes
 =====
@@ -42,15 +38,15 @@ The HSMM-Pi can function as an internal mesh node or as a gateway mesh node.  A 
 
 Mesh Gateway Node
 =================
-The Mesh Gateway is capable of routing traffic throughout the mesh, and provides an Internet link to the mesh through the wired Ethernet port.  The gateway obtains a DHCP lease on the wired interface, and advertises its Internet link to mesh nodes using OLSR.
+The Mesh Gateway is capable of routing traffic throughout the mesh, and provides an Internet link to the mesh through the any interface port.  The gateway obtains a DHCP lease on the interface, and advertises its Internet link to mesh nodes using OLSR.
 
 
-Internal Mesh Node
+Internal Mesh Node/AP
 ==================
-This node is capable of routing traffic throughout the mesh and providing mesh access to any hosts connected to its wired Ethernet port.  The node can run a DHCP server that issues DHCP leases to any hosts on the wired connection.  It also runs a DNS server that can provide name resolution for mesh nodes and Internet hosts.  The following sequence shows how the two types of nodes can be deployed:
+This node is capable of routing traffic throughout the mesh and providing mesh access to any hosts connected to this own access point.  The node can run a DHCP server that issues DHCP leases to any hosts on the connection.  It also runs a DNS server that can provide name resolution for mesh nodes and Internet hosts.  The following sequence shows how the two types of nodes can be deployed:
 
 ```
-(Client1) --> (Switch) --> (Internal Mesh Node) --> 
+(Client1) --> (Internal Mesh Node/AP) --> 
 (Ad-Hoc WiFi Network) --> (Mesh Gateway) --> (Internet)
 ```
 
@@ -79,45 +75,12 @@ Raspberry Pi Installation
         git clone https://github.com/urlgrey/hsmm-pi.git
         cd hsmm-pi
         sh install.sh
+
 1.  Login to the web application on the Pi:
 http://(wired Ethernet IP of the node):8080/
 1.  Access the Admin account using the 'admin' username and 'changeme' password.
 1.  Change the password for HSMM-Pi
 1.  Configure as either an Internal or Gateway node
-
-
-BeagleBone Black Installation
-=============================
-
-1. Download the latest BeagleBone Black Ubuntu 12.04 image: http://www.armhf.com/index.php/boards/beaglebone-black/#precise
-1. Write the image to an SD memory card using the steps on the page referenced in the previous step
-1. Insert the SD card into a BeagleBone Black board
-1. Apply power to the BeagleBone Black
-1. Login to the BeagleBone Black through an SSH session or the console using the 'ubuntu' account
-1. Transfer the image to the running BeagleBone Black using SCP
-1. Write the image to the eMMC flash memory using the steps mentioned in the first step here.
-1. Wait for all 4 LEDs to go solid (could take several minutes)
-1. Shutdown the Beaglbone Black (sudo /sbin/init 0)
-1. Remove the memory card from the BeagleBone Black
-1. Apply power to the BeagleBone Black
-1. Login to the BeagleBone Black through an SSH session or the console using the 'ubuntu' account
-1. Change the password for the 'ubuntu' account
-1. Install the development tools necessary to build OLSRD and retrieve the HSMM-Pi project:
-
-        sudo apt-get upgrade
-        sudo apt-get install make gcc git
-1. If installing over an SSH connection, then I recommend you install 'screen' (sudo apt-get install screen) to ensure that the installation script is not stopped prematurely if you lose connectivity.  This is optional, but I highly recommend using screen if installing over the network.  You can find more info on screen here: http://linux.die.net/man/1/screen
-1. Run the following commands to download the HSMM-Pi project and install
-
-        git clone https://github.com/urlgrey/hsmm-pi.git
-        cd hsmm-pi
-        sh install.sh
-1. Login to the web application:
-http://(wired Ethernet IP of the node):8080/
-1. Access the Admin account using the 'admin' username and 'changeme' password.
-1. Change the password for HSMM-Pi
-1. Configure as either an Internal or Gateway node
-
 
 
 Upgrade Steps
@@ -145,12 +108,38 @@ This represents the minimum set of steps:
 1. Configure the WiFi interface:
     1.  Specify an IP address that will be unique throughout the mesh network.  This will be different every mesh node.  A default will be provided based on the last 3 fragments of the WiFi adapter MAC address.
 1. Configure the Wired interface:
-    1. Set the Wired interface mode to LAN
+    1. Set the Wired interface mode to LAN or write the wireless interface for AP
 1. Configure the Mesh settings
     1. Specify your amatuer radio callsign (i.e. KK6DCI)
     1. Specify your node name, likely a composition of your callsign and a unique number in your mesh (i.e. KK6DCI-7)
 1. Click 'Save'
+1. On terminal, configure as AP
+
+        sudo apt-get install hostapd
+1. Edit ```/etc/default/hostapd``` and replace:
+
+        DAEMON_CONF="/etc/hostapd/hostapd.conf"
+1. And create ```/etc/hostapd/hostapd.conf``` with the following parameters:
+
+        interface=wlan1
+        driver=nl80211
+        ssid=<YOUR NEW SSID>
+        channel=1
+        hw_mode=g
+        macaddr_acl=0
+        ignore_broadcast_ssid=0
+        beacon_int=100 # This sets how often the WiFi will send a beacon out.
+        auth_algs=3
+        wmm_enabled=1
+        wpa=3
+        wpa_passphrase=<YOUR-PASSPHRASE>
+        wpa_key_mgmt=WPA-PSK
+        wpa_pairwise=TKIP
+        rsn_pairwise=CCMP
+
 1. If successful, click the 'Reboot' button in the alert and proceed.
+
+ * Troubleshooting: [rt2x00usb_vendor_request: Error](https://www.raspberrypi.org/forums/viewtopic.php?t=22623)
 
 
 Gateway Node Configuration
@@ -171,4 +160,4 @@ This represents the minimum set of steps:
 FAQ
 ====
 
-A list of frequently asked questions can be found on [our wiki](https://github.com/urlgrey/hsmm-pi/wiki), at the [FAQ page](https://github.com/urlgrey/hsmm-pi/wiki/FAQ).
+A list of frequently asked questions can be found on [this wiki](https://github.com/cristhoper/hsmm-pi/wiki), at the [FAQ page](https://github.com/cristhoper/hsmm-pi/wiki/FAQ).
